@@ -1,60 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-// import 'package:html/parser.dart' show parse;
-// import 'package:html/dom.dart';
-
-
+import 'dart:convert';
+import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:html_parse/models.dart';
 
 
 void main() => runApp(MyApp());
 
-
-// // fetch html
-// Future<String> fetchHTML(String url) async {
-//   final response = await http.get('http://www.tonyminter.com');
-Future<http.Response> _getData() async {
-    String url = 'http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=REG&week=17';
-    return await http.get(url);
-  
-
-  // if (response.statusCode == null)
-  //   return response.body;
-  // else throw Exception('Failed');
-  
-}
-
-  // FutureBuilder<String>(
-  //     future: fetchHTML('http://your_page.ru/page.html'),
-  //     builder: (context, snapshot){
-  //       if (snapshot.hasData) {
-  //         //Your downloaded page
-  //         _temp = snapshot.data;
-  //         print(snapshot.data);
-  //         return Text('Finished');
-  //       }
-  //       else if (snapshot.hasError)
-  //         return Text('ERROR');
-
-  //       return Text('LOADING');
-  //     },
-  //   ),
-
-   // parse(_temp);
-
-
-
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
-  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter HTML Parsing',
+      title: 'Flutter Json Parsing',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter HTML parse'),
-      
+      home: MyHomePage(title: 'make nfl json work'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -70,40 +34,69 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
 
- runtheJewels() {
-    debugPrint('button works');
-    print('this too');
+  List data;
+
+  Future loadGame() async{
+    String jsonString = await rootBundle.loadString('assets/data/ss.json');
+    final jsonResponse = json.decode(jsonString);
+
+
+  setState(() {
+      data = jsonResponse["gms"];
+  });
+  return "success";
+  
+
   }
+
+ 
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'can you get the html in?',
-            ),
-
-          ],
+        appBar: AppBar(
+          title: Text('Flutter listview with json'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          print('test');
-          runtheJewels();
-          _getData().then((response){
-              //dom.Document document = parser.parse(response.body);
-              debugPrint(response.body);
-            }).catchError((e) => print(e));
-        },
-        tooltip: 'Load me up!',
-        child: Icon(Icons.view_list),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        body: ListView.builder(
+          itemBuilder: (context, index) {
+            return Card(
+              elevation: 5,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    top: 32.0, bottom: 32.0, left: 16.0, right: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text( 'Game: ' + data[index]['eid'].toString() ,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+                    ),
+                    Text(data[index]['hnn'] + ' at ' + data[index]['vnn'],
+                      style: TextStyle(color: Colors.grey.shade600,fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          itemCount: data == null ? 0 : data.length,
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            print('test');
+            loadGame();
+          },
+          tooltip: 'Load me up!',
+          child: Icon(Icons.view_list),
+        ) //
+        );
+
+
   }
+ @override
+  void initState() {
+    super.initState();
+    this.loadGame();
+  }
+
 }
